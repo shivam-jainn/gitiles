@@ -1,7 +1,7 @@
 import os
 import subprocess
 from pathlib import Path  # Import Path from pathlib
-from profiles import create_profile
+from gitiles.profiles import create_profile
 
 def generate_ssh_key(ssh_key_path):
     # Ensure the SSH directory exists
