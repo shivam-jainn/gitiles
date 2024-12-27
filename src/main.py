@@ -23,6 +23,7 @@ def main():
     # Switch profile command
     switch_parser = subparsers.add_parser("switch", help="Switch to a Git profile")
     switch_parser.add_argument("name", type=str, help="Name of the profile to switch to")
+    switch_parser.add_argument("--local", action="store_true", help="Switch profile locally for the current repo")
 
     init_parser = subparsers.add_parser("init", help="Initialize a Git repository with a specific profile")
     init_parser.add_argument("repo_path", help="Path to the repository to initialize")
@@ -46,7 +47,7 @@ def main():
         elif args.command == "delete":
             delete_profile(args.name)
         elif args.command == "switch":
-            switch_profile(args.name)
+            switch_profile(args.name, local=args.local)
         elif args.command == "init":
             init_repo_with_profile(args.repo_path, args.profile)
         else:
