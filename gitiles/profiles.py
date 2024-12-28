@@ -115,7 +115,12 @@ def switch_profile(profile_name, local=False):
         raise ValueError(f"Profile '{profile_name}' does not exist.")
 
     profile = config['profiles'][profile_name]
-    
+    ssh_key_path = profile["ssh_key_path"]
+
+    # Clear existing SSH keys and add the new one
+    subprocess.run(["ssh-add", "-D"], check=True)  # Remove all existing keys
+    subprocess.run(["ssh-add", ssh_key_path], check=True)  # Add the profile-specific key
+
     if local:
         try:
             # Check if we are inside a Git repository
@@ -124,10 +129,6 @@ def switch_profile(profile_name, local=False):
             # Update the Git configuration for this repository locally
             subprocess.run(["git", "config", "user.name", profile_name], cwd=repo_path, check=True)
             subprocess.run(["git", "config", "user.email", profile["email"]], cwd=repo_path, check=True)
-
-            # Add the SSH key to the SSH agent
-            ssh_key_path = profile["ssh_key_path"]
-            subprocess.run(["ssh-add", ssh_key_path], check=True)
 
             print(f"Switched to profile '{profile_name}' locally in repository '{repo_path}'.")
 
@@ -139,11 +140,19 @@ def switch_profile(profile_name, local=False):
         subprocess.run(["git", "config", "--global", "user.name", profile_name], check=True)
         subprocess.run(["git", "config", "--global", "user.email", profile["email"]], check=True)
 
-        # Add the SSH key to the SSH agent globally
-        ssh_key_path = profile["ssh_key_path"]
-        subprocess.run(["ssh-add", ssh_key_path], check=True)
-
         print(f"Switched to profile '{profile_name}' globally.")
+
+    update_shell_prompt(profile_name)
+
+def update_shell_prompt(profile_name):
+    """Update the shell prompt to include the active profile."""
+    profile_indicator = f"({profile_name}) "
+    shell_prompt = os.environ.get("PS1", "")
+    
+    if not shell_prompt.startswith(profile_indicator):
+        os.environ["PS1"] = profile_indicator + shell_prompt
+        print(f"Shell prompt updated to include profile: {profile_indicator.strip()}")
+
 
 # Initialize a Git repository with a specific profile
 def init_repo_with_profile(repo_path, profile_name):
